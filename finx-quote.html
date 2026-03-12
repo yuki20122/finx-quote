@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>Quote Builder by Yuki Hirose, Head of Market Operations</title>
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --card: #101010;
+        --text: #d7d7d7;
+        --muted: #8f8f8f;
+        --border: #2a2a2a;
+        --header: #151515;
+        --bid: #ef4444;
+        --ask: #22c55e;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, #0b0b0b 0%, #0a0a0a 100%);
+        color: var(--text);
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+      }
+      h1 {
+        margin: 0 0 12px;
+        color: #f4a340;
+        font-size: 1.15rem;
+      }
+      .meta {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      .top-controls {
+        display: flex;
+        gap: 8px;
+        align-items: end;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .b2c2-controls {
+        display: flex;
+        gap: 8px;
+        align-items: end;
+        flex-wrap: wrap;
+      }
+      .top-controls label {
+        display: grid;
+        gap: 4px;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .top-controls input {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        background: #0c1629;
+        color: var(--text);
+        width: 140px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+      th,
+      td {
+        border-bottom: 1px solid var(--border);
+        padding: 12px 10px;
+        text-align: left;
+      }
+      th {
+        background: var(--header);
+        color: #a5b5cc;
+        font-size: 0.78rem;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      td:nth-child(3),
+      td:nth-child(4),
+      td:nth-child(5),
+      td:nth-child(6) {
+        text-align: right;
+        font-family: "JetBrains Mono", "Menlo", monospace;
+      }
+      .bid {
+        color: var(--bid);
+        font-weight: 800;
+      }
+      .ask {
+        color: var(--ask);
+        font-weight: 800;
+      }
+      .error {
+        margin-top: 10px;
+        color: #fca5a5;
+        font-size: 0.9rem;
+      }
+      .ok {
+        color: #86efac;
+      }
+      .ng {
+        color: #fca5a5;
+      }
+      .quote-box {
+        margin-top: 16px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .quote-title {
+        margin: 0 0 10px;
+        color: #f4a340;
+        font-size: 0.9rem;
+      }
+      .quote-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        gap: 10px;
+      }
+      .quote-grid label {
+        display: grid;
+        gap: 4px;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+      .quote-grid input,
+      .quote-grid select,
+      .quote-msg {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        background: #0c1629;
+        color: var(--text);
+      }
+      .quote-stats {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+        gap: 6px 12px;
+      }
+      .quote-stat {
+        margin: 0;
+        color: #cdd8ea;
+        font-size: 0.86rem;
+      }
+      .quote-msg-wrap {
+        margin-top: 10px;
+      }
+      .quote-msg {
+        width: 100%;
+        min-height: 140px;
+        box-sizing: border-box;
+        font-family: "JetBrains Mono", "Menlo", monospace;
+        font-size: 0.8rem;
+      }
+      .quote-actions {
+        margin-top: 8px;
+      }
+      .btn {
+        border: 1px solid #513722;
+        background: #2b1f13;
+        color: #f7c68a;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+      }
+      .profit-box {
+        margin-top: 16px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .profit-title {
+        margin: 0 0 8px;
+        color: #f4a340;
+        font-size: 0.9rem;
+      }
+      .profit-note {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .profit-plus {
+        color: #22c55e;
+        font-weight: 800;
+      }
+      .profit-minus {
+        color: #ef4444;
+        font-weight: 800;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @media (max-width: 900px) {
+        .quote-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .quote-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <h1>Quote Builder by Yuki Hirose, Head of Market Operations</h1>
+        <p id="last-fetch" class="meta">最終取得: -</p>
+        <p id="poll-info" class="meta">ポーリング: -</p>
+        <p id="source-status" class="meta">ソース状態: -</p>
+        <div class="top-controls">
+          <div id="b2c2-controls" class="b2c2-controls">
+            <label
+              >B2C2 BTC数量
+              <input id="b2c2-btc-qty" type="number" min="0.00001" step="0.00001" value="0.5" />
+            </label>
+            <label
+              >B2C2 ETH数量
+              <input id="b2c2-eth-qty" type="number" min="0.0001" step="0.0001" value="25" />
+            </label>
+            <button id="b2c2-apply-btn" class="btn" type="button">数量反映</button>
+          </div>
+          <label
+            >ポーリング(ms)
+            <input id="poll-interval-ms" type="number" min="1000" step="100" value="5000" />
+          </label>
+          <button id="poll-apply-btn" class="btn" type="button">間隔を反映</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>取引所</th>
+              <th>銘柄</th>
+              <th>BID</th>
+              <th>ASK</th>
+              <th>SPREAD</th>
+              <th>SPREAD%</th>
+              <th>データ時刻(API)</th>
+            </tr>
+          </thead>
+          <tbody id="rates-body"></tbody>
+        </table>
+
+        <div class="quote-box">
+          <p class="quote-title">顧客向けクオート作成 (基準取引所を選択)</p>
+          <div class="quote-grid">
+            <label
+              >銘柄
+              <select id="q-inst"></select>
+            </label>
+            <label
+              >基準取引所
+              <select id="q-source"></select>
+            </label>
+            <label
+              >方向
+              <select id="q-side">
+                <option value="buy">Buy (ASK基準)</option>
+                <option value="sell">Sell (BID基準)</option>
+              </select>
+            </label>
+            <label
+              >手数料(%)
+              <input id="q-fee" type="number" min="0" step="0.001" value="0.10" />
+            </label>
+            <label
+              >計算基準
+              <select id="q-basis">
+                <option value="qty">数量ベース</option>
+                <option value="amount">金額ベース</option>
+              </select>
+            </label>
+            <label
+              >数量
+              <input id="q-qty" type="number" min="0.00000001" step="0.00000001" value="0.1" />
+            </label>
+            <label
+              >金額(JPY)
+              <input id="q-amount" type="number" min="1" step="1" value="1000000" />
+            </label>
+          </div>
+
+          <div class="quote-stats">
+            <p id="q-base-rate" class="quote-stat">基準レート: -</p>
+            <p id="q-final-rate" class="quote-stat">手数料込みレート: -</p>
+            <p id="q-est-qty" class="quote-stat">数量: -</p>
+            <p id="q-total-jpy" class="quote-stat">合計支払い(円): -</p>
+          </div>
+
+          <div class="quote-msg-wrap">
+            <textarea id="q-message" class="quote-msg" readonly></textarea>
+            <div class="quote-actions">
+              <button id="q-copy" class="btn" type="button">クオート文をコピー</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="profit-box" class="profit-box">
+          <p class="profit-title">利益試算 (顧客Rate vs B2C2 ASK調達)</p>
+          <p class="profit-note">前提: 顧客は表示Rateで買い、当方はB2C2 ASKで同数量を調達</p>
+          <table>
+            <thead>
+              <tr>
+                <th>銘柄</th>
+                <th>顧客Rate</th>
+                <th>B2C2 Hedge</th>
+                <th>数量</th>
+                <th>収益見込み</th>
+                <th>収益%</th>
+              </tr>
+            </thead>
+            <tbody id="profit-body">
+              <tr><td colspan="6">データ待ち</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p id="error" class="error"></p>
+      </div>
+    </div>
+
+    <script src="./config.js"></script>
+    <script>
+      const APP_CONFIG = window.APP_CONFIG || {};
+      const PAGE_HOST = window.location.hostname || "";
+      const IS_REMOTE_PAGE_HOST = PAGE_HOST && PAGE_HOST !== "127.0.0.1" && PAGE_HOST !== "localhost";
+      const ENABLE_B2C2 = Boolean(APP_CONFIG.enableB2c2 ?? !IS_REMOTE_PAGE_HOST);
+
+      function resolveB2c2PriceUrl() {
+        if (!ENABLE_B2C2) return "";
+        const configuredUrl = APP_CONFIG.b2c2PriceUrl || "";
+
+        if (!configuredUrl) {
+          return IS_REMOTE_PAGE_HOST ? `http://${PAGE_HOST}:8787/b2c2/prices` : "http://127.0.0.1:8787/b2c2/prices";
+        }
+
+        try {
+          const resolved = new URL(configuredUrl, window.location.href);
+          const isLocalProxyHost = resolved.hostname === "127.0.0.1" || resolved.hostname === "localhost";
+          if (isLocalProxyHost && IS_REMOTE_PAGE_HOST) {
+            return `${resolved.protocol}//${PAGE_HOST}:${resolved.port || "8787"}${resolved.pathname}${resolved.search}`;
+          }
+          return resolved.toString();
+        } catch (_error) {
+          return configuredUrl;
+        }
+      }
+
+      const REST_ORDERBOOK_URL =
+        APP_CONFIG.restOrderbookUrl || "https://okj-proxy.yuki-2012g.workers.dev/okj/orderbook";
+      const BITTRADE_ORDERBOOK_URL =
+        APP_CONFIG.bittradeOrderbookUrl ||
+        "https://okj-proxy.yuki-2012g.workers.dev/bittrade/orderbook";
+      const B2C2_PRICE_URL = resolveB2c2PriceUrl();
+      const B2C2_API_TOKEN = APP_CONFIG.b2c2ApiToken || "";
+      const INSTRUMENTS = APP_CONFIG.instruments || ["BTC-JPY", "ETH-JPY"];
+      const DEFAULT_POLL_INTERVAL_MS = Number(APP_CONFIG.pollIntervalMs ?? 5000);
+      const DEFAULT_B2C2_BTC_QTY = Number(APP_CONFIG.b2c2BtcQty ?? 0.5);
+      const DEFAULT_B2C2_ETH_QTY = Number(APP_CONFIG.b2c2EthQty ?? 25);
+
+      const bodyEl = document.getElementById("rates-body");
+      const errorEl = document.getElementById("error");
+      const lastFetchEl = document.getElementById("last-fetch");
+      const pollInfoEl = document.getElementById("poll-info");
+      const sourceStatusEl = document.getElementById("source-status");
+      const b2c2ControlsEl = document.getElementById("b2c2-controls");
+      const b2c2BtcQtyEl = document.getElementById("b2c2-btc-qty");
+      const b2c2EthQtyEl = document.getElementById("b2c2-eth-qty");
+      const b2c2ApplyBtnEl = document.getElementById("b2c2-apply-btn");
+      const pollIntervalMsEl = document.getElementById("poll-interval-ms");
+      const pollApplyBtnEl = document.getElementById("poll-apply-btn");
+      const qInstEl = document.getElementById("q-inst");
+      const qSourceEl = document.getElementById("q-source");
+      const qSideEl = document.getElementById("q-side");
+      const qFeeEl = document.getElementById("q-fee");
+      const qBasisEl = document.getElementById("q-basis");
+      const qQtyEl = document.getElementById("q-qty");
+      const qAmountEl = document.getElementById("q-amount");
+      const qBaseRateEl = document.getElementById("q-base-rate");
+      const qFinalRateEl = document.getElementById("q-final-rate");
+      const qEstQtyEl = document.getElementById("q-est-qty");
+      const qTotalJpyEl = document.getElementById("q-total-jpy");
+      const qMessageEl = document.getElementById("q-message");
+      const qCopyEl = document.getElementById("q-copy");
+      const profitBoxEl = document.getElementById("profit-box");
+      const profitBodyEl = document.getElementById("profit-body");
+
+      const latestByInstrument = new Map();
+      const bittradeByInstrument = new Map();
+      const b2c2ByInstrument = new Map();
+      const sourceState = {
+        okj: "-",
+        bittrade: "-",
+        b2c2: "-",
+      };
+      let quoteState = null;
+      let pollTimer = null;
+      let pollIntervalMs = Math.max(1000, DEFAULT_POLL_INTERVAL_MS);
+      const b2c2Qty = {
+        btc: DEFAULT_B2C2_BTC_QTY,
+        eth: DEFAULT_B2C2_ETH_QTY,
+      };
+
+      function getEnabledSources() {
+        return ENABLE_B2C2 ? ["OKJ", "BITTRADE", "B2C2"] : ["OKJ", "BITTRADE"];
+      }
+
+      function initializeLayout() {
+        if (!ENABLE_B2C2) {
+          b2c2ControlsEl?.classList.add("hidden");
+          profitBoxEl?.classList.add("hidden");
+        }
+      }
+
+      function formatNumber(value) {
+        const num = Number(value);
+        return Number.isFinite(num) ? num.toLocaleString("ja-JP") : "-";
+      }
+
+      function formatRate(value) {
+        const num = Number(value);
+        return Number.isFinite(num)
+          ? num.toLocaleString("ja-JP", { maximumFractionDigits: 0 })
+          : "-";
+      }
+
+      function formatQty(value) {
+        const num = Number(value);
+        return Number.isFinite(num)
+          ? num.toLocaleString("ja-JP", { minimumFractionDigits: 0, maximumFractionDigits: 8 })
+          : "-";
+      }
+
+      function formatJpy(value) {
+        const num = Number(value);
+        return Number.isFinite(num)
+          ? Math.round(num).toLocaleString("ja-JP", { maximumFractionDigits: 0 })
+          : "-";
+      }
+
+      function truncateDown(value, digits) {
+        const num = Number(value);
+        const d = Number(digits);
+        if (!Number.isFinite(num) || !Number.isFinite(d) || d < 0) return 0;
+        const p = 10 ** d;
+        return Math.floor(num * p) / p;
+      }
+
+      function sanitizeQty(value, fallback) {
+        const n = Number(value);
+        return Number.isFinite(n) && n > 0 ? n : fallback;
+      }
+
+      function formatTime(value) {
+        if (!value) return "-";
+        const t = new Date(value);
+        if (Number.isNaN(t.getTime())) return String(value);
+        return t.toLocaleString("ja-JP");
+      }
+
+      function canonicalInstrument(raw) {
+        if (!raw) return "";
+        const normalized = String(raw).toUpperCase().replace("/", "-").replace("_", "-");
+        if (normalized === "BTCJPY") return "BTC-JPY";
+        if (normalized === "ETHJPY") return "ETH-JPY";
+        return normalized;
+      }
+
+      function displayInstrument(instId) {
+        if (!instId) return "-";
+        return String(instId).replace("-JPY", "");
+      }
+
+      function parseB2c2Payload(data) {
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.data)) return data.data;
+        if (Array.isArray(data?.results)) return data.results;
+        if (data && typeof data === "object") {
+          return Object.entries(data).map(([symbol, quote]) => ({ symbol, ...(quote || {}) }));
+        }
+        return [];
+      }
+
+      function normalizeRow(row) {
+        const inst = canonicalInstrument(row.instrument_id || row.instId || row.symbol || row.pair);
+        const bestBid = Number(row.best_bid ?? row.bid ?? row.bid_price ?? row.buy ?? row.bidPx);
+        const bestAsk = Number(row.best_ask ?? row.ask ?? row.ask_price ?? row.sell ?? row.askPx);
+        if (!inst || !Number.isFinite(bestBid) || !Number.isFinite(bestAsk)) return null;
+        return {
+          instrument_id: inst,
+          best_bid: bestBid,
+          best_ask: bestAsk,
+          timestamp: row.timestamp || row.ts || row.created || Date.now(),
+        };
+      }
+
+      function buildB2c2PriceUrl() {
+        if (!B2C2_PRICE_URL) return "";
+        const url = new URL(B2C2_PRICE_URL, window.location.href);
+        url.searchParams.set("btcQty", String(b2c2Qty.btc));
+        url.searchParams.set("ethQty", String(b2c2Qty.eth));
+        return url.toString();
+      }
+
+      function renderSourceState() {
+        const toLabel = (v) => {
+          if (v === "OK") return '<span class="ok">OK</span>';
+          if (v === "NG") return '<span class="ng">NG</span>';
+          return "-";
+        };
+        const labels = [
+          `OKJ ${toLabel(sourceState.okj)}`,
+          `BITTRADE ${toLabel(sourceState.bittrade)}`,
+        ];
+        if (ENABLE_B2C2) labels.push(`B2C2 ${toLabel(sourceState.b2c2)}`);
+        sourceStatusEl.innerHTML = `ソース状態: ${labels.join(" / ")}`;
+      }
+
+      function collectRows() {
+        const okjRows = INSTRUMENTS.map((inst) => latestByInstrument.get(inst))
+          .filter(Boolean)
+          .map((row) => ({ ...row, exchange: "OKJ" }));
+        const bittradeRows = INSTRUMENTS.map((inst) => bittradeByInstrument.get(inst))
+          .filter(Boolean)
+          .map((row) => ({ ...row, exchange: "BITTRADE" }));
+        const b2c2Rows = ENABLE_B2C2
+          ? INSTRUMENTS.map((inst) => b2c2ByInstrument.get(inst))
+              .filter(Boolean)
+              .map((row) => ({ ...row, exchange: "B2C2" }))
+          : [];
+        return [...okjRows, ...bittradeRows, ...b2c2Rows];
+      }
+
+      function renderRows() {
+        const rows = collectRows();
+        bodyEl.innerHTML = rows
+          .map(
+            (row) => `
+            <tr>
+              <td>${row.exchange}</td>
+              <td>${displayInstrument(row.instrument_id)}</td>
+              <td class="bid">${formatNumber(row.best_bid)}</td>
+              <td class="ask">${formatNumber(row.best_ask)}</td>
+              <td>${formatNumber(row.best_ask - row.best_bid)}</td>
+              <td>${formatNumber(((row.best_ask - row.best_bid) / row.best_bid) * 100)}%</td>
+              <td>${formatTime(row.timestamp)}</td>
+            </tr>
+          `
+          )
+          .join("");
+
+        lastFetchEl.textContent = `最終取得: ${new Date().toLocaleString("ja-JP")}`;
+      }
+
+      function setQuoteFormDefaults() {
+        qInstEl.innerHTML = INSTRUMENTS.map((inst) => `<option value="${inst}">${inst}</option>`).join("");
+        qSourceEl.innerHTML = getEnabledSources()
+          .map((source) => `<option value="${source}">${source}</option>`)
+          .join("");
+        if (INSTRUMENTS.includes("BTC-JPY")) qInstEl.value = "BTC-JPY";
+        qSourceEl.value = "OKJ";
+        qFeeEl.value = "0.10";
+        qBasisEl.value = "qty";
+        qQtyEl.disabled = false;
+        qAmountEl.disabled = true;
+        b2c2Qty.btc = sanitizeQty(DEFAULT_B2C2_BTC_QTY, 0.5);
+        b2c2Qty.eth = sanitizeQty(DEFAULT_B2C2_ETH_QTY, 25);
+        if (b2c2BtcQtyEl) b2c2BtcQtyEl.value = String(b2c2Qty.btc);
+        if (b2c2EthQtyEl) b2c2EthQtyEl.value = String(b2c2Qty.eth);
+      }
+
+      function applyB2c2Qty() {
+        b2c2Qty.btc = sanitizeQty(b2c2BtcQtyEl?.value, b2c2Qty.btc || 0.5);
+        b2c2Qty.eth = sanitizeQty(b2c2EthQtyEl?.value, b2c2Qty.eth || 25);
+        if (b2c2BtcQtyEl) b2c2BtcQtyEl.value = String(b2c2Qty.btc);
+        if (b2c2EthQtyEl) b2c2EthQtyEl.value = String(b2c2Qty.eth);
+      }
+
+      function updateBasisInputs() {
+        const basis = qBasisEl.value;
+        qQtyEl.disabled = basis !== "qty";
+        qAmountEl.disabled = basis !== "amount";
+      }
+
+      function getSourceLabel(source) {
+        if (source === "BITTRADE") return "BITTRADE";
+        if (source === "B2C2") return "B2C2";
+        return "OKJ";
+      }
+
+      function getSourceRow(inst, source) {
+        if (source === "BITTRADE") return bittradeByInstrument.get(inst);
+        if (source === "B2C2") return b2c2ByInstrument.get(inst);
+        return latestByInstrument.get(inst);
+      }
+
+      function buildQuoteMessage(params) {
+        const {
+          inst,
+          side,
+          sideLabel,
+          finalRate,
+          qty,
+          totalJpy,
+          timeText,
+          okjBid,
+          okjAsk,
+          bittradeBid,
+          bittradeAsk,
+        } = params;
+        const instText = String(inst).replace("-", "/");
+        const okjRef = side === "buy" ? okjAsk : okjBid;
+        const bittradeRef = side === "buy" ? bittradeAsk : bittradeBid;
+        return [
+          `[FINX JCrypto Quote]`,
+          `Instrument: ${instText}`,
+          `Side: ${sideLabel}`,
+          `Rate: ${formatRate(finalRate)} JPY`,
+          `Quantity: ${formatQty(qty)}`,
+          `Total JPY: ${formatJpy(totalJpy)} JPY`,
+          `Quoted At: ${timeText}`,
+          ``,
+          `OKJ: ${formatRate(okjRef)} JPY`,
+          `BITTRADE: ${formatRate(bittradeRef)} JPY`,
+        ].join("\n");
+      }
+
+      function sanitizePollInterval(value) {
+        const n = Number(value);
+        return Number.isFinite(n) && n >= 1000 ? Math.round(n) : pollIntervalMs;
+      }
+
+      function renderProfitEstimate() {
+        if (!ENABLE_B2C2) {
+          profitBodyEl.innerHTML = '<tr><td colspan="6">公開版ではB2C2利益試算を表示しません</td></tr>';
+          return;
+        }
+
+        if (!quoteState) {
+          profitBodyEl.innerHTML = '<tr><td colspan="6">データ待ち</td></tr>';
+          return;
+        }
+
+        const b2c2Row = b2c2ByInstrument.get(quoteState.inst);
+        if (!b2c2Row) {
+          profitBodyEl.innerHTML = '<tr><td colspan="6">B2C2データ待ち</td></tr>';
+          return;
+        }
+
+        const customerRate = quoteState.finalRate;
+        const b2c2Ask = truncateDown(Number(b2c2Row.best_ask), 0);
+        const b2c2Bid = truncateDown(Number(b2c2Row.best_bid), 0);
+        const qty = quoteState.qty;
+        const customerTotal = Math.ceil(customerRate * qty);
+        let hedgeLabel = "";
+        let hedgeRate = 0;
+        let hedgeTotal = 0;
+        let profit = 0;
+
+        if (quoteState.side === "buy") {
+          hedgeLabel = `BUY @ ASK ${formatRate(b2c2Ask)}`;
+          hedgeRate = b2c2Ask;
+          hedgeTotal = Math.ceil(hedgeRate * qty);
+          profit = customerTotal - hedgeTotal;
+        } else {
+          hedgeLabel = `SELL @ BID ${formatRate(b2c2Bid)}`;
+          hedgeRate = b2c2Bid;
+          hedgeTotal = Math.ceil(hedgeRate * qty);
+          profit = hedgeTotal - customerTotal;
+        }
+
+        const profitPct = hedgeTotal > 0 ? (profit / hedgeTotal) * 100 : NaN;
+        const profitClass = profit >= 0 ? "profit-plus" : "profit-minus";
+
+        profitBodyEl.innerHTML = `
+          <tr>
+            <td>${quoteState.inst.replace("-JPY", "")}</td>
+            <td>${formatRate(customerRate)}</td>
+            <td>${hedgeLabel}</td>
+            <td>${formatQty(qty)}</td>
+            <td class="${profitClass}">${formatJpy(profit)} JPY</td>
+            <td class="${profitClass}">${formatNumber(profitPct)}%</td>
+          </tr>
+        `;
+      }
+
+      function renderQuote() {
+        const inst = qInstEl.value;
+        const source = qSourceEl.value;
+        const sourceLabel = getSourceLabel(source);
+        const sourceRow = getSourceRow(inst, source);
+        const okjRow = latestByInstrument.get(inst);
+        const bittradeRow = bittradeByInstrument.get(inst);
+        if (!sourceRow) {
+          qBaseRateEl.textContent = "基準レート: データ待ち";
+          qFinalRateEl.textContent = "手数料込みレート: -";
+          qEstQtyEl.textContent = "数量: -";
+          qTotalJpyEl.textContent = "合計支払い(円): -";
+          qMessageEl.value = `${sourceLabel}レート取得後にクオートを作成できます。`;
+          quoteState = null;
+          renderProfitEstimate();
+          return;
+        }
+
+        const side = qSideEl.value;
+        const feePct = Number(qFeeEl.value);
+        const fee = Number.isFinite(feePct) ? feePct / 100 : 0;
+        const baseRate =
+          side === "buy" ? Number(sourceRow.best_ask) : Number(sourceRow.best_bid);
+        const finalRateRaw = side === "buy" ? baseRate * (1 + fee) : baseRate * (1 - fee);
+        const finalRate = truncateDown(finalRateRaw, 0);
+        const basis = qBasisEl.value;
+
+        const qtyInput = Number(qQtyEl.value);
+        const amountInput = Number(qAmountEl.value);
+        let qty = Number.isFinite(qtyInput) && qtyInput > 0 ? truncateDown(qtyInput, 3) : 0;
+        let totalJpy = 0;
+
+        if (basis === "amount") {
+          const amountBase = Number.isFinite(amountInput) && amountInput > 0 ? amountInput : 0;
+          qty = finalRate > 0 ? truncateDown(amountBase / finalRate, 3) : 0;
+          totalJpy = Math.ceil(qty * finalRate);
+        } else {
+          totalJpy = Math.ceil(qty * finalRate);
+        }
+
+        const sideLabel = side === "buy" ? "Buy" : "Sell";
+        const timeText = new Date().toLocaleString("ja-JP");
+
+        qBaseRateEl.textContent = `基準レート (${sourceLabel}): ${formatRate(baseRate)} JPY`;
+        qFinalRateEl.textContent = `手数料込みレート: ${formatRate(finalRate)} JPY`;
+        qEstQtyEl.textContent = `数量: ${formatQty(qty)}`;
+        qTotalJpyEl.textContent = `合計支払い(円): ${formatJpy(totalJpy)} JPY`;
+        qMessageEl.value = buildQuoteMessage({
+          inst,
+          side,
+          sideLabel,
+          finalRate,
+          qty,
+          totalJpy,
+          timeText,
+          okjBid: okjRow?.best_bid,
+          okjAsk: okjRow?.best_ask,
+          bittradeBid: bittradeRow?.best_bid,
+          bittradeAsk: bittradeRow?.best_ask,
+        });
+        quoteState = {
+          inst,
+          side,
+          finalRate,
+          qty,
+          totalJpy,
+        };
+        renderProfitEstimate();
+      }
+
+      async function fetchOkjOnce() {
+        const res = await fetch(REST_ORDERBOOK_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("レスポンス形式が不正です");
+        latestByInstrument.clear();
+        for (const item of data) {
+          const row = normalizeRow(item);
+          if (row && INSTRUMENTS.includes(row.instrument_id)) {
+            latestByInstrument.set(row.instrument_id, row);
+          }
+        }
+      }
+
+      async function fetchBittradeOnce() {
+        const res = await fetch(BITTRADE_ORDERBOOK_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("レスポンス形式が不正です");
+        bittradeByInstrument.clear();
+        for (const item of data) {
+          const row = normalizeRow(item);
+          if (row && INSTRUMENTS.includes(row.instrument_id)) {
+            bittradeByInstrument.set(row.instrument_id, row);
+          }
+        }
+      }
+
+      async function fetchB2c2Once() {
+        if (!B2C2_PRICE_URL) throw new Error("B2C2 URL未設定");
+        const headers = {};
+        if (B2C2_API_TOKEN) headers.Authorization = `Token ${B2C2_API_TOKEN}`;
+        const res = await fetch(buildB2c2PriceUrl(), { cache: "no-store", headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data && typeof data === "object" && !Array.isArray(data) && data.error) {
+          throw new Error(data.message || data.error);
+        }
+        const rows = parseB2c2Payload(data);
+        b2c2ByInstrument.clear();
+        for (const item of rows) {
+          const row = normalizeRow(item);
+          if (row && INSTRUMENTS.includes(row.instrument_id)) {
+            b2c2ByInstrument.set(row.instrument_id, row);
+          }
+        }
+      }
+
+      async function tick() {
+        const errors = [];
+
+        await fetchOkjOnce()
+          .then(() => {
+            sourceState.okj = "OK";
+          })
+          .catch((e) => {
+            sourceState.okj = "NG";
+            errors.push(`OKJ: ${e.message}`);
+          });
+
+        await fetchBittradeOnce()
+          .then(() => {
+            sourceState.bittrade = "OK";
+          })
+          .catch((e) => {
+            sourceState.bittrade = "NG";
+            errors.push(`BITTRADE: ${e.message}`);
+          });
+
+        if (ENABLE_B2C2) {
+          await fetchB2c2Once()
+            .then(() => {
+              sourceState.b2c2 = "OK";
+            })
+            .catch((e) => {
+              sourceState.b2c2 = "NG";
+              errors.push(`B2C2: ${e.message}`);
+            });
+        } else {
+          sourceState.b2c2 = "-";
+          b2c2ByInstrument.clear();
+        }
+
+        renderSourceState();
+        renderRows();
+        renderQuote();
+        errorEl.textContent = errors.join(" / ");
+      }
+
+      function startPolling() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollInfoEl.textContent = `ポーリング: ${pollIntervalMs} ms`;
+        tick();
+        pollTimer = setInterval(tick, pollIntervalMs);
+      }
+
+      initializeLayout();
+      setQuoteFormDefaults();
+      if (pollIntervalMsEl) pollIntervalMsEl.value = String(pollIntervalMs);
+      updateBasisInputs();
+      const quoteInputs = [qInstEl, qSourceEl, qSideEl, qFeeEl, qBasisEl, qQtyEl, qAmountEl];
+      for (const el of quoteInputs) {
+        el.addEventListener("input", () => {
+          updateBasisInputs();
+          renderQuote();
+        });
+        el.addEventListener("change", () => {
+          updateBasisInputs();
+          renderQuote();
+        });
+      }
+      qCopyEl.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(qMessageEl.value || "");
+          qCopyEl.textContent = "コピー完了";
+          setTimeout(() => {
+            qCopyEl.textContent = "クオート文をコピー";
+          }, 1000);
+        } catch (_e) {
+          qCopyEl.textContent = "コピー失敗";
+          setTimeout(() => {
+            qCopyEl.textContent = "クオート文をコピー";
+          }, 1200);
+        }
+      });
+      b2c2ApplyBtnEl?.addEventListener("click", () => {
+        applyB2c2Qty();
+        tick();
+      });
+      pollApplyBtnEl?.addEventListener("click", () => {
+        pollIntervalMs = sanitizePollInterval(pollIntervalMsEl?.value);
+        if (pollIntervalMsEl) pollIntervalMsEl.value = String(pollIntervalMs);
+        startPolling();
+      });
+      renderSourceState();
+      startPolling();
+    </script>
+  </body>
+</html>
